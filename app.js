@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/authRoute');
 const userRoutes = require('./routes/userRoute');
+const cors = require('cors');
 const categoryRoutes = require('./routes/categoryRoute');
 const productRoutes = require('./routes/productRoute');
 const expressValidator = require('express-validator');
@@ -27,6 +28,7 @@ app.use(morgan('dev'));
 app.use(bodyParser.json());  
 app.use(cookieParser());
 app.use(expressValidator());
+app.use(cors());
 
 
 //routes middleware
