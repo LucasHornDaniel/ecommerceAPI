@@ -11,10 +11,10 @@ console.log(uuidv1());
 exports.signup = (req, res) => {
     //console.log('req.body', req.body);
     const user = new User(req.body);
-    user.save((err, user)=> {
-        if(err){
+    user.save((error, user)=> {
+        if(error){
             return res.status(400).json({
-                err: errorHandler(err)
+                err: errorHandler(error)
             })
         }
         user.salt = undefined;
@@ -27,7 +27,9 @@ exports.signup = (req, res) => {
 
 
 exports.signin = (req, res) => {
+    
         const {email, password} = req.body
+        console.log(email, password);
         user.findOne({email}, (err, user) =>{
             if(err || !user){
                 return res.status(400).json({
@@ -47,14 +49,25 @@ exports.signin = (req, res) => {
         });
 };
 
-exports.signout = (req, res) => {
-    res.clearCookie('t');
-    res.json({message: 'Usurio deslogado'});
+exports.signout = ( res) => {
+    res.clearCookie('getTokent');
+    res.json({message: 'Usuario deslogado'});
 };
 
 exports.requireSignin = expressJwt({
     secret: process.env.JWT_SECRET,
-    userProperty: "auth",    
+    userProperty: "auth",
+    getToken: function fromHeaderOrQuerystring(req) {
+        if (
+          req.headers.authorization &&
+          req.headers.authorization.split(" ")[0] === "Bearer"
+        ) {
+          return req.headers.authorization.split(" ")[1];
+        } else if (req.query && req.query.token) {
+          return req.query.token;
+        }
+        return null;
+      },    
 });
 
 exports.isAuth = (req, res, next) => {
@@ -66,6 +79,14 @@ exports.isAuth = (req, res, next) => {
     }
     next();
 };
+
+exports.validadeToken = (req, res) => {
+    console.log(req.headers)
+    return res.status(200).json({
+        data : true,
+    });
+
+}
 
 exports.isAdmin = (req, res, next) => {
     if(req.profile.role === 0){

@@ -7,7 +7,9 @@ const { errorHandler } = require('../helpers/dbErrorHandler');
 
 
 exports.productById = (req, res, next, id) => {
-    Product.findById(id).exec((err, product) => {
+    Product.findById(id)
+    .populate('category')
+    .exec((err, product) => {
     if(err|| !product) {
         return res.status(400).json({
             error: 'Produto não encontrado!'
@@ -51,7 +53,7 @@ exports.create = (req, res) => {
                 error: 'A imagem não pode ser carregada'
             });
         };
-
+        console.log(fields)
         const {name, discription, price, category, quantity, shipping} = fields;
         if(!name || !discription || !price|| !category|| !quantity|| !shipping){
             return res.status(400).json({
@@ -140,6 +142,29 @@ exports.list = (req, res) =>{
         })
 };
 
+exports.listSearch = (req, res) => {
+    // create query object to hold search value and category value
+    const query = {};
+    // assign search value to query.name
+    if (req.query.search) {
+        query.name = { $regex: req.query.search, $options: 'i' };
+        // assigne category value to query.category
+        if (req.query.category && req.query.category != 'All') {
+            query.category = req.query.category;
+        }
+        // find the product based on query object with 2 properties
+        // search and category
+        Product.find(query, (err, products) => {
+            if (err) {
+                return res.status(400).json({
+                    error: errorHandler(err)
+                });
+            }
+            res.json(products);
+        }).select('-photo');
+    }
+};
+
 
 exports.listRelated = (req, res) => {
     let limit = req.query.limit ? parseInt(req.query.limit) : 6;
@@ -149,7 +174,7 @@ exports.listRelated = (req, res) => {
         .exec((err, products) => {
             if (err) {
                 return res.status(400).json({
-                    error: 'Products not found'
+                    error: 'Products não encontrado!'
                 });
             }
             
@@ -161,7 +186,7 @@ exports.listCategories = (req, res) => {
     Product.distinct('category', {}, (err, categories) => {
         if (err) {
             return res.status(400).json({
-                error: 'Categories not found'
+                error: 'Categoria não encontrada!'
             });
         }
         res.json(categories);
